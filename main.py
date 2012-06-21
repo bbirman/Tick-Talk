@@ -9,7 +9,11 @@ import sys
 import os
 import email
 import datetime
-import cPickle
+import pickle
+from tkinter import *
+from tkinter import ttk
+
+
 
 
 def countLines(email):
@@ -17,8 +21,6 @@ def countLines(email):
 	return count
 
 def matchMonth(month):
-	
-	#month = dateString[8:11]
 	if month == "Jan":
 		return 1
 	elif month == "Feb":
@@ -43,10 +45,6 @@ def matchMonth(month):
 		return 11
 	elif month == "Dec":
 		return 12
-	else:
-		#print "PROBLEM MONTH " + dateString
-		print "PROBLEM MONTH " + month
-		return 12 #need to fix error case
 
 #Takes the date header and returns a tuple of (0) year, (1) week number, (2) day of the week
 def parseDate(dateString):
@@ -54,11 +52,13 @@ def parseDate(dateString):
 	monthNum = -1
 	year = -1
 	
+	#if date is one digit long
 	if dateString[6] == ' ':
 		day = dateString[5:6] 
 		month = dateString[7:10]
 		monthNum = matchMonth(month)
 		year = dateString[11:15]
+	#date is two digits long
 	else:
 		day = dateString[5:7]
 		month = dateString[8:11]
@@ -68,19 +68,21 @@ def parseDate(dateString):
 	date = datetime.date(int(year), monthNum, int(day))
 	dateTuple = date.isocalendar()	
 	return dateTuple
+
+
 	
 def main():		
-	FILE = open("data.txt", "r") 
-	raw_emails = cPickle.load(FILE)
+	FILE = open("post3-2.txt", "rb") 
+	raw_emails = pickle.load(FILE)
 	FILE.close()	
 	
 	names = []
 	for raw_email in raw_emails:
-		email_message = email.message_from_string(raw_email)
+		email_message = email.message_from_bytes(raw_email)
 		name = email.utils.parseaddr(email_message['From'])[0] #0 for name, 1 for email address
 		if names.count(name) == 0:
 			names.append(name)
-			print name
+			print(name)
 		
 	#set up dictionary with each name correlating to a list of the counts of each week (over a year)
 	peopleCounts = {}
@@ -89,19 +91,25 @@ def main():
 		peopleCounts[name] = yearList
 
 	for raw_email in raw_emails:	
-		email_message = email.message_from_string(raw_email)
+		email_message = email.message_from_bytes(raw_email)
 		name = email.utils.parseaddr(email_message['From'])[0] #0 for name, 1 for email address
-		lines = countLines(raw_email)
-		dateTuple = parseDate(email_message['Date'])
+		dateTuple = parseDate(str(email_message['Date']))
 		weekBucket = dateTuple[1]
-		peopleCounts[name][weekBucket] += lines
+		lines = 0
+		for index in range(len(email_message.get_payload())):
+			lines = countLines(str(email_message.get_payload()[index]))
+			peopleCounts[name][weekBucket] += lines	
+
 
 
 	for name in names:
-		print "--" + name + "--"
+		print("--" + name + "--")
 		for week in peopleCounts[name]:
-			print week
+			print(week)
 
+	root = Tk()
+	ttk.Button(root, text="Hello World2").grid()
+	root.mainloop()
 	
 if __name__ == '__main__':
 	main()
