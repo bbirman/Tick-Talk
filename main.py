@@ -17,6 +17,8 @@ def countLines(email):
 	return count
 
 def matchMonth(month):
+	
+	#month = dateString[8:11]
 	if month == "Jan":
 		return 1
 	elif month == "Feb":
@@ -42,20 +44,33 @@ def matchMonth(month):
 	elif month == "Dec":
 		return 12
 	else:
+		#print "PROBLEM MONTH " + dateString
+		print "PROBLEM MONTH " + month
 		return 12 #need to fix error case
 
 #Takes the date header and returns a tuple of (0) year, (1) week number, (2) day of the week
 def parseDate(dateString):
-	day = dateString[5:7]
-	month = dateString[8:11]
-	monthNum = matchMonth(month)	
-	year = dateString[12:16]
+	day = -1
+	monthNum = -1
+	year = -1
+	
+	if dateString[6] == ' ':
+		day = dateString[5:6] 
+		month = dateString[7:10]
+		monthNum = matchMonth(month)
+		year = dateString[11:15]
+	else:
+		day = dateString[5:7]
+		month = dateString[8:11]
+		monthNum = matchMonth(month)	
+		year = dateString[12:16]
+	
 	date = datetime.date(int(year), monthNum, int(day))
 	dateTuple = date.isocalendar()	
 	return dateTuple
 	
 def main():		
-	FILE = open("batch1.txt", "r") 
+	FILE = open("data.txt", "r") 
 	raw_emails = cPickle.load(FILE)
 	FILE.close()	
 	
@@ -70,7 +85,7 @@ def main():
 	#set up dictionary with each name correlating to a list of the counts of each week (over a year)
 	peopleCounts = {}
 	for name in names:
-		yearList = [0]*53
+		yearList = [0]*54
 		peopleCounts[name] = yearList
 
 	for raw_email in raw_emails:	
@@ -80,6 +95,7 @@ def main():
 		dateTuple = parseDate(email_message['Date'])
 		weekBucket = dateTuple[1]
 		peopleCounts[name][weekBucket] += lines
+
 
 	for name in names:
 		print "--" + name + "--"
