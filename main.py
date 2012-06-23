@@ -14,7 +14,14 @@ from tkinter import *
 from tkinter import ttk
 
 
+peopleCounts = {}
+weekTotals = [0]*54
+drawType = "percentages"
 
+def nameLabel(currentTag):
+	toTruncate = currentTag.index("current")
+	name = currentTag[0:toTruncate]
+	return name
 
 def countLines(email):
 	count = email.count("<cli:body>") + email.count("<=\r\ncli:body>") + email.count("<c=\r\nli:body>") + email.count("<cl=\r\ni:body>") + email.count("<cli=\r\n:body>") + email.count("<cli:=\r\nbody>") + email.count("<cli:b=\r\nody>") + email.count("<cli:bo=\r\ndy>") + email.count("<cli:bod=\r\ny>") + email.count("<cli:body=\r\n>")
@@ -69,7 +76,14 @@ def parseDate(dateString):
 	dateTuple = date.isocalendar()	
 	return dateTuple
 
-
+def drawValue(name, week):
+	if drawType == "rawLines":
+		return .25*peopleCounts[name][week]
+	elif drawType == "percentages":
+		if weekTotals[week] != 0:
+			return (peopleCounts[name][week]/weekTotals[week]*500)
+		else:
+			return 0
 	
 def main():		
 	FILE = open("post3-2.txt", "rb") 
@@ -77,6 +91,7 @@ def main():
 	FILE.close()	
 	
 	names = []
+	#weekTotals = [0]*54
 	for raw_email in raw_emails:
 		email_message = email.message_from_bytes(raw_email)
 		name = email.utils.parseaddr(email_message['From'])[0] #0 for name, 1 for email address
@@ -85,7 +100,7 @@ def main():
 			#print(name)
 		
 	#set up dictionary with each name correlating to a list of the counts of each week (over a year)
-	peopleCounts = {}
+	#peopleCounts = {}
 	for name in names:
 		yearList = [0]*54
 		peopleCounts[name] = yearList
@@ -99,6 +114,7 @@ def main():
 		for index in range(len(email_message.get_payload())):
 			lines = countLines(str(email_message.get_payload()[index]))
 			peopleCounts[name][weekBucket] += lines	
+			weekTotals[weekBucket] += lines
 
 
 
@@ -110,9 +126,15 @@ def main():
 	root = Tk()
 	root.title("Tick-Talk")
 	YOFFSET = 800
+	
+	mainframe = ttk.Frame(root)
+	mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+
+	label = ttk.Label(mainframe, text=" ")
+	label.grid(column=0, row=0)
 
 	canvas = Canvas(root, width=1200, height=1000)
-	canvas.pack()
+	canvas.grid(column=0, row=1)
 	
 	xcoord = 1080
 	bottomHeight = [YOFFSET]*108
@@ -131,7 +153,7 @@ def main():
 		j = 53
 		while j >= 0:
 			topHeight[j] = xcoord
-			topHeight.insert(j+1, .25*peopleCounts[name][j])
+			topHeight.insert(j+1, drawValue(name, j))
 			xcoord = xcoord - 20
 			j = j - 1
 
@@ -163,12 +185,8 @@ def main():
 			color = "blue"
 		elif num%10 == 0:
 			color = "red"
-			
-			
-		
-		canvas.create_polygon(plotThis,fill=color,outline="brown",width=2, smooth="true")
-			
 
+		canvas.create_polygon(plotThis,fill=color,outline="brown",width=2, smooth="true", tags=name)
 		num = num + 1
 
 		k = 0
@@ -178,7 +196,7 @@ def main():
 				bottomHeight[k] = topHeight[108 - k]
 			k = k+1
 		
-	
+	canvas.bind('<Motion>', lambda e: label.configure(text = nameLabel(canvas.gettags(CURRENT))))		
 	mainloop()
 	
 if __name__ == '__main__':
