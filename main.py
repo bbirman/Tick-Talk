@@ -82,7 +82,7 @@ def main():
 		name = email.utils.parseaddr(email_message['From'])[0] #0 for name, 1 for email address
 		if names.count(name) == 0:
 			names.append(name)
-			print(name)
+			#print(name)
 		
 	#set up dictionary with each name correlating to a list of the counts of each week (over a year)
 	peopleCounts = {}
@@ -102,14 +102,84 @@ def main():
 
 
 
-	for name in names:
-		print("--" + name + "--")
-		for week in peopleCounts[name]:
-			print(week)
+	#for name in names:
+	#	print("--" + name + "--")
+	#	for week in peopleCounts[name]:
+	#		print(week)
 
 	root = Tk()
-	ttk.Button(root, text="Hello World2").grid()
-	root.mainloop()
+	root.title("Tick-Talk")
+	YOFFSET = 800
+
+	canvas = Canvas(root, width=1200, height=1000)
+	canvas.pack()
+	
+	xcoord = 1080
+	bottomHeight = [YOFFSET]*108
+	i = 0
+	while i < 108:
+		if i%2 == 0:
+			bottomHeight[i] = xcoord
+			xcoord = xcoord - 20
+		i = i + 1
+
+	num = 0 
+	for name in names:
+		topHeight = [0]*54;
+
+		xcoord = 1080
+		j = 53
+		while j >= 0:
+			topHeight[j] = xcoord
+			topHeight.insert(j+1, .25*peopleCounts[name][j])
+			xcoord = xcoord - 20
+			j = j - 1
+
+		for h in range(108):
+			if h%2 == 1:
+				topHeight[h] = bottomHeight[108 - h] - topHeight[h]  
+
+		topHeight.append(topHeight[106])
+		topHeight.append(bottomHeight[107])
+		plotThis = topHeight + bottomHeight
+	
+		
+		color = "lightblue"
+		if num%10 == 8:
+			color = "green"
+		elif num%10 == 7: 
+			color = "hot pink"
+		elif num%10 == 6: 
+			color = "yellow"
+		elif num%10 == 5: 
+			color = "gray"
+		elif num%10 == 4:
+			color = "pink"
+		elif num%10 == 3:
+			color = "purple"
+		elif num%10 == 2:
+			color = "orange"
+		elif num%10 == 1:
+			color = "blue"
+		elif num%10 == 0:
+			color = "red"
+			
+			
+		
+		canvas.create_polygon(plotThis,fill=color,outline="brown",width=2, smooth="true")
+			
+
+		num = num + 1
+
+		k = 0
+		while k < 108:
+			if k%2 == 1:
+
+				bottomHeight[k] = topHeight[108 - k]
+			k = k+1
+		
+	
+	mainloop()
 	
 if __name__ == '__main__':
 	main()
