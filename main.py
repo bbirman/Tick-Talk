@@ -15,8 +15,9 @@ from tkinter import ttk
 
 
 peopleCounts = {}
+names = []
 weekTotals = [0]*54
-drawType = "percentages"
+drawType = "rawLines"
 
 def nameLabel(currentTag):
 	toTruncate = currentTag.index("current")
@@ -75,7 +76,19 @@ def parseDate(dateString):
 	date = datetime.date(int(year), monthNum, int(day))
 	dateTuple = date.isocalendar()	
 	return dateTuple
+	
+def mergeNames(keepName, mergeNames):
+	for mergeName in mergeNames:
+		for i in range(54):
+			peopleCounts[keepName][i] += peopleCounts[mergeName][i]
+		del peopleCounts[mergeName]
+		names.remove(mergeName)
+		
 
+def mergeTheseNames():
+	mergeName("Example name", ["Example name duplicate"])
+	
+	
 def drawValue(name, week):
 	if drawType == "rawLines":
 		return .25*peopleCounts[name][week]
@@ -90,7 +103,7 @@ def main():
 	raw_emails = pickle.load(FILE)
 	FILE.close()	
 	
-	names = []
+	
 	#weekTotals = [0]*54
 	for raw_email in raw_emails:
 		email_message = email.message_from_bytes(raw_email)
@@ -116,7 +129,7 @@ def main():
 			peopleCounts[name][weekBucket] += lines	
 			weekTotals[weekBucket] += lines
 
-
+	mergeTheseNames()
 
 	#for name in names:
 	#	print("--" + name + "--")
