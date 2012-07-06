@@ -1,3 +1,4 @@
+import math
 from tkinter import *
 from tkinter import ttk
 
@@ -43,7 +44,8 @@ class Display:
 		if timeType == "By year":
 			self.drawLinear(drawFunction, year)
 		elif timeType == "Total":
-			self.drawLinear(drawFunction, 0000)
+			#self.drawLinear(drawFunction, 0000)
+			self.drawRadar(drawFunction, 0000)
 	
 	def drawLinearValue(self, drawType, year, name, week):
 	
@@ -51,7 +53,7 @@ class Display:
 			return .25*self.data[year][name][week]
 		elif drawType == "Percentage":
 			if self.data[year]["Total"][week] != 0:
-				return self.data[year][name][week]/self.data[year]["Total"][week]*500
+				return self.data[year][name][week]/self.data[year]["Total"][week]*400
 			else: 
 				return 0
 	
@@ -62,6 +64,64 @@ class Display:
 			return name
 		else:
 			return ""
+
+	def toCartesian(self, radius, position):
+		theta = (position * 6.79) - 96.79
+		x = .75*radius*math.cos(math.radians(theta)) + 600
+		y = .75*radius*math.sin(math.radians(theta)) + 350
+		return [x, y]
+
+	
+	def drawRadar(self, drawFunction, year):
+		smallR = [0]*54
+		num = 0
+		for name in self.names:
+			toPlot = []
+			bigR = [0]*54
+
+			j = 0
+			while j < 54:
+				bigR[j] = smallR[j] + self.drawLinearValue(drawFunction, year, name, j)
+				if 1 <= j < 53 :
+					plotPosition = self.toCartesian(bigR[j], j)
+					toPlot.append(plotPosition[0])
+					toPlot.append(plotPosition[1])
+				j = j + 1
+
+			plotPosition = self.toCartesian((bigR[53] + bigR[0]), 53)
+			toPlot.append(plotPosition[0])
+			toPlot.append(plotPosition[1])
+
+			color = "lightblue"
+			if num%10 == 8:
+				color = "green"
+			elif num%10 == 7: 
+				color = "hot pink"
+			elif num%10 == 6: 
+				color = "yellow"
+			elif num%10 == 5: 
+				color = "gray"
+			elif num%10 == 4:
+				color = "pink"
+			elif num%10 == 3:
+				color = "purple"
+			elif num%10 == 2:
+				color = "orange"
+			elif num%10 == 1:
+				color = "blue"
+			elif num%10 == 0:
+				color = "red"
+
+			self.canvas.tag_lower(self.canvas.create_polygon(toPlot,fill=color, activefill="black", smooth="true", tags=name, splinesteps=20))
+			#self.canvas.tag_lower(self.canvas.create_line(toPlot,fill=color, width=3, smooth="true", tags=name))
+			num = num + 1
+
+			k = 0
+			while k < 54:
+				smallR[k] = bigR[k]
+				k = k+1
+		
+	
 	
 	def drawLinear(self, drawFunction, year):
 		YOFFSET = 600
@@ -126,4 +186,3 @@ class Display:
 
 		
 			self.canvas.bind('<Motion>', lambda e: self.label.configure(text = self.nameLabel(self.canvas.gettags(CURRENT))))		
-			#canvas.bind('<Motion>', lambda e: canvas.itemconfig(canvas.find_withtag(canvas.gettags(CURRENT)), fill="blue"))	

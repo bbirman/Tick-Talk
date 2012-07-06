@@ -79,9 +79,7 @@ def mergeNames(keepName, mergeNames):
 		for year in years:
 			for i in range(54):
 				data[year][keepName][i] += data[year][mergeName][i]
-			#	peopleCounts[keepName][i] += peopleCounts[mergeName][i]
 			del data[year][mergeName]
-			#del peopleCounts[mergeName]
 		names.remove(mergeName)
 		
 	for mergeName in mergeNames:
@@ -93,14 +91,6 @@ def mergeNames(keepName, mergeNames):
 def mergeTheseNames():
 	#mergeName("Example name", ["Example name duplicate"])
 	pass
-	
-			
-def areaHovered(canvas, label):
-	label.configure(text = nameLabel(canvas.gettags(CURRENT)))
-	#label.configure(text = canvas.gettags(CURRENT))
-	#area = canvas.find_withtag(canvas.gettags(CURRENT))
-	#canvas.itemconfig(canvas.find_withtag(canvas.gettags(CURRENT)), fill="blue")
-
 	
 def chooseYear(event):
 	display.canvas.delete("all")
