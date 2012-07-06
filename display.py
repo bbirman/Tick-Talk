@@ -34,28 +34,36 @@ class Display:
 		self.drawList.pack(side=LEFT, padx=30)
 		self.timeList.pack(side=LEFT, padx=30)
 		
-	def drawValue(self, drawType, year, name, week):
-		if drawType == "rawLines":
+	
+	
+	def drawThis(self, drawFunction, timeType, year=None):
+		print("Drawthis drawfunction: " + drawFunction)
+		print("Drawthis year: " + str(year))
+		print("Drawthis timetype : " + timeType)
+		if timeType == "By year":
+			self.drawLinear(drawFunction, year)
+		elif timeType == "Total":
+			self.drawLinear(drawFunction, 0000)
+	
+	def drawLinearValue(self, drawType, year, name, week):
+	
+		if drawType == "Line count":
 			return .25*self.data[year][name][week]
-		elif drawType == "percentages":
-			pass
-			#if weekTotals[year][week] != 0:
-			#	return (self.data[year][name][week]/weekTotals[year][week]*500)
-				#return (peopleCounts[name][week]/weekTotals[week]*500)
-			#else:
-			
-			#	return 0
+		elif drawType == "Percentage":
+			if self.data[year]["Total"][week] != 0:
+				return self.data[year][name][week]/self.data[year]["Total"][week]*500
+			else: 
+				return 0
 	
 	def nameLabel(self, currentTag):
 		if len(currentTag) > 0:
 			toTruncate = currentTag.index("current")
-			#toTruncate = currentTag.index(" ")
 			name = currentTag[0:toTruncate]
 			return name
 		else:
 			return ""
 	
-	def drawYear(self, year):
+	def drawLinear(self, drawFunction, year):
 		YOFFSET = 600
 		xcoord = 1080
 		bottomHeight = [YOFFSET]*108
@@ -74,7 +82,7 @@ class Display:
 			j = 53
 			while j >= 0:
 				topHeight[j] = xcoord
-				topHeight.insert(j+1, self.drawValue("rawLines", year, name, j))
+				topHeight.insert(j+1, self.drawLinearValue(drawFunction, year, name, j))
 				xcoord = xcoord - 20
 				j = j - 1
 
@@ -116,6 +124,6 @@ class Display:
 					bottomHeight[k] = topHeight[108 - k]
 				k = k+1
 
-			#canvas.bind('<Motion>', lambda e: label.configure(text = canvas.gettags(CURRENT)))
+		
 			self.canvas.bind('<Motion>', lambda e: self.label.configure(text = self.nameLabel(self.canvas.gettags(CURRENT))))		
 			#canvas.bind('<Motion>', lambda e: canvas.itemconfig(canvas.find_withtag(canvas.gettags(CURRENT)), fill="blue"))	

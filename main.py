@@ -12,14 +12,13 @@ import datetime
 import pickle
 from tkinter import *
 from tkinter import ttk
-from display2 import Display
+from display import Display
 
 
 data = {}
 names = []
 years = []
 weekTotals = {}
-drawType = "rawLines"
 
 def countLines(email):
 	count = email.count("<cli:body>") + email.count("<=\r\ncli:body>") + email.count("<c=\r\nli:body>") + email.count("<cl=\r\ni:body>") + email.count("<cli=\r\n:body>") + email.count("<cli:=\r\nbody>") + email.count("<cli:b=\r\nody>") + email.count("<cli:bo=\r\ndy>") + email.count("<cli:bod=\r\ny>") + email.count("<cli:body=\r\n>")
@@ -85,10 +84,15 @@ def mergeNames(keepName, mergeNames):
 			#del peopleCounts[mergeName]
 		names.remove(mergeName)
 		
+	for mergeName in mergeNames:
+		for j in range(54):
+			data[0000][keepName][j] += data[0000][mergeName][j]
+		del data[0000][mergeName]
+		
 
 def mergeTheseNames():
-	mergeName("Example name", ["Example name duplicate"])
-	
+	#mergeName("Example name", ["Example name duplicate"])
+	pass
 	
 			
 def areaHovered(canvas, label):
@@ -103,14 +107,13 @@ def chooseYear(event):
 	item = display.yearList.get(ACTIVE)
 	print("Item: " + str(item))
 	if item == 2009:
-		display.drawYear(2009)
+		display.drawThis(display.drawList.get(ACTIVE), "By year", 2009)
 	elif item == 2010:
-		display.drawYear(2010)
+		display.drawThis(display.drawList.get(ACTIVE), "By year", 2010)
 	elif item == 2011:
-		display.drawYear(2011)
+		display.drawThis(display.drawList.get(ACTIVE), "By year", 2011)
 	elif item == 2012:
-		display.drawYear(2012)
-		
+		display.drawThis(display.drawList.get(ACTIVE), "By year", 2012)
 
 def typeSelected(event):
 	selection = display.timeList.get(ACTIVE)
@@ -119,21 +122,20 @@ def typeSelected(event):
 		display.yearList.pack(side=LEFT, padx=30)
 		display.yearList.bind("<ButtonRelease-1>", chooseYear)
 	elif selection == "Total": 
+		display.canvas.delete("all")
 		display.yearList.pack_forget()
-		display.draw(display.)
+		display.drawThis(display.drawList.get(ACTIVE), "Total")
 			
 FILE = open("post3-2.txt", "rb") 
 raw_emails = pickle.load(FILE)
 FILE.close()	
 
-#weekTotals = [0]*54
 for raw_email in raw_emails:
 	email_message = email.message_from_bytes(raw_email)
 	name = email.utils.parseaddr(email_message['From'])[0] #0 for name, 1 for email address
 	year = parseDate(str(email_message['Date']))[0]
 	if names.count(name) == 0:
 		names.append(name)
-		#print(name)
 	if years.count(year) == 0:
 		years.append(year)
 		print("year: #" + str(year) + "#")
@@ -142,15 +144,14 @@ for year in years:
 	data[year] = {}
 	for name in names: 
 		data[year][name] = [0]*54
-	
-	weekTotals[year] = [0]*54
+	data[year]["Total"] = [0]*54
 
+#set up "year" 0000 for total instead of dividing by year
+data[0000] = {}
+for name in names: 
+	data[0000][name] = [0]*54
+data[0000]["Total"] = [0]*54
 
-#set up dictionary with each name correlating to a list of the counts of each week (over a year)
-#peopleCounts = {}
-#for name in names:
-	#yearList = [0]*54
-	#peopleCounts[name] = yearList
 
 for raw_email in raw_emails:	
 	email_message = email.message_from_bytes(raw_email)
@@ -161,17 +162,18 @@ for raw_email in raw_emails:
 	lines = 0
 	for index in range(len(email_message.get_payload())):
 		lines = countLines(str(email_message.get_payload()[index]))
-		#peopleCounts[name][weekBucket] += lines	
-		#weekTotals[weekBucket] += lines
 		data[yearBucket][name][weekBucket] += lines
-		weekTotals[yearBucket][weekBucket] += lines
+		data[yearBucket]["Total"][weekBucket] += lines
+		data[0000][name][weekBucket] += lines
+		data[0000]["Total"][weekBucket] += lines
+		
 
 mergeTheseNames()
 
 display = Display(data, names, years)
 display.yearList.pack(side=LEFT, padx=30)
 display.timeList.bind("<Button-1>", typeSelected)
-display.drawYear(1970); 
+display.drawThis("Line count", "By year", 1970); 
 	
 mainloop()
 
